@@ -257,8 +257,6 @@ button { font: inherit; }
 .badge-waiting { background: rgba(233, 184, 96, 0.16); color: var(--gold-strong); }
 .badge-neutral { background: var(--surface-strong); color: var(--cream-muted); }
 
-.credentials-note { margin-top: 20px; padding: 16px; border-radius: var(--radius-md); border: 1px dashed rgba(233, 184, 96, 0.5); background: rgba(233, 184, 96, 0.08); }
-.credentials-note p { margin: 0 0 10px; }
 .credentials-text { margin: 0 0 12px; padding: 12px; border-radius: 10px; background: rgba(8, 19, 31, 0.6); white-space: pre-wrap; word-break: break-word; font-size: 0.85rem; }
 
 .reveal-card { position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 40px 28px; }
@@ -388,3 +386,18 @@ button { font: inherit; }
   color: var(--gold-strong);
   font-size: 0.9rem;
 }
+
+.auth-switch { margin: 20px 0 0; color: var(--cream-muted); font-size: 0.92rem; }
+
+.link-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--gold-strong);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.link-button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; border-radius: 4px; }

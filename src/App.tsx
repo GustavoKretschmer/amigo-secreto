@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Snowfall } from './components/Snowfall';
 import { LoadingScreen, StatusScreen } from './components/StatusScreen';
 import { useAdminExists, useAuthUser, useMember } from './hooks/liveData';
@@ -6,6 +6,7 @@ import { AdminPage } from './pages/AdminPage';
 import { LoginPage } from './pages/LoginPage';
 import { ParticipantPage } from './pages/ParticipantPage';
 import { SetupPage } from './pages/SetupPage';
+import { SignUpPage } from './pages/SignUpPage';
 import { signOutCurrentUser } from './services/session';
 
 export function App() {
@@ -21,8 +22,15 @@ function CurrentScreen() {
   const authUser = useAuthUser();
   const adminExists = useAdminExists();
   if (authUser === undefined || adminExists === undefined) return <CenteredScreen><LoadingScreen /></CenteredScreen>;
-  if (authUser === null) return <CenteredScreen>{adminExists ? <LoginPage /> : <SetupPage />}</CenteredScreen>;
+  if (authUser === null) return <CenteredScreen>{adminExists ? <AuthScreens /> : <SetupPage />}</CenteredScreen>;
   return <SignedInScreen uid={authUser.uid} />;
+}
+
+function AuthScreens() {
+  const [isSigningUp, setIsSigningUp] = useState(false);
+  return isSigningUp
+    ? <SignUpPage onSwitchToLogin={() => setIsSigningUp(false)} />
+    : <LoginPage onSwitchToSignUp={() => setIsSigningUp(true)} />;
 }
 
 function SignedInScreen({ uid }: { uid: string }) {

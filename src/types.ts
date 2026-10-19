@@ -17,7 +17,6 @@ export interface Assignment {
 }
 
 export interface NewMemberInput {
-  firstName: string;
-  lastName: string;
+  fullName: string;
   password: string;
 }

@@ -1,9 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { buildUsername, isCompleteUsername, usernameToEmail } from './username';
+import { buildDisplayName, buildUsername, isCompleteUsername, usernameToEmail } from './username';
 
 describe('username', () => {
-  it('builds nome.sobrenome without accents, spaces or uppercase', () => {
-    expect(buildUsername(' João ', 'da Conceição')).toBe('joao.daconceicao');
+  it('uses the first name and the last surname', () => {
+    expect(buildUsername('João da Silva Santos')).toBe('joao.santos');
+  });
+
+  it('removes accents, uppercase and extra spaces', () => {
+    expect(buildUsername('  Ângela   Conceição ')).toBe('angela.conceicao');
+  });
+
+  it('returns empty when only one name is given', () => {
+    expect(buildUsername('Maria')).toBe('');
+  });
+
+  it('keeps the full name tidy for display', () => {
+    expect(buildDisplayName('  Ana   Maria  Souza ')).toBe('Ana Maria Souza');
   });
 
   it('maps the typed username to the internal login email', () => {

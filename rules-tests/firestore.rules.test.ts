@@ -14,8 +14,9 @@ function memberFields(username: string, role: 'admin' | 'participant') {
   return { username, displayName: username, role, participates: true, hasDrawn: false };
 }
 
-function firestoreAs(uid: string): Firestore {
-  return testEnvironment.authenticatedContext(uid).firestore() as unknown as Firestore;
+function firestoreAs(uid: string, username?: string): Firestore {
+  const tokenOptions = username ? { email: `${username}@amigo-secreto.app` } : undefined;
+  return testEnvironment.authenticatedContext(uid, tokenOptions).firestore() as unknown as Firestore;
 }
 
 async function seed(drawStatus: 'open' | 'closed'): Promise<void> {
@@ -55,7 +56,7 @@ afterAll(async () => {
 
 describe('first admin setup', () => {
   it('lets the first person register as admin', async () => {
-    const db = firestoreAs('founder');
+    const db = firestoreAs('founder', 'fun.dador');
     const batch = writeBatch(db);
     batch.set(doc(db, 'users/founder'), memberFields('fun.dador', 'admin'));
     batch.set(doc(db, 'meta/admin'), { uid: 'founder' });
@@ -64,7 +65,7 @@ describe('first admin setup', () => {
 
   it('blocks a second admin once one exists', async () => {
     await seed('closed');
-    const db = firestoreAs('intruder');
+    const db = firestoreAs('intruder', 'in.truso');
     const batch = writeBatch(db);
     batch.set(doc(db, 'users/intruder'), memberFields('in.truso', 'admin'));
     batch.set(doc(db, 'meta/admin'), { uid: 'intruder' });
@@ -72,15 +73,35 @@ describe('first admin setup', () => {
   });
 });
 
-describe('participant registration', () => {
-  it('allows the admin to register participants', async () => {
+describe('self registration', () => {
+  it('lets a person create their own participant account while the draw is closed', async () => {
     await seed('closed');
-    await assertSucceeds(setDoc(doc(firestoreAs('admin'), 'users/caio'), memberFields('caio.lima', 'participant')));
+    await assertSucceeds(setDoc(doc(firestoreAs('caio', 'caio.lima'), 'users/caio'), memberFields('caio.lima', 'participant')));
   });
 
-  it('forbids participants from registering people', async () => {
+  it('rejects a username that does not match the login', async () => {
     await seed('closed');
-    await assertFails(setDoc(doc(firestoreAs('ana'), 'users/caio'), memberFields('caio.lima', 'participant')));
+    await assertFails(setDoc(doc(firestoreAs('caio', 'caio.lima'), 'users/caio'), memberFields('ana.silva', 'participant')));
+  });
+
+  it('rejects registering yourself as admin', async () => {
+    await seed('closed');
+    await assertFails(setDoc(doc(firestoreAs('caio', 'caio.lima'), 'users/caio'), memberFields('caio.lima', 'admin')));
+  });
+
+  it('rejects creating an account for someone else', async () => {
+    await seed('closed');
+    await assertFails(setDoc(doc(firestoreAs('caio', 'caio.lima'), 'users/dani'), memberFields('caio.lima', 'participant')));
+  });
+
+  it('closes registrations while the draw is open', async () => {
+    await seed('open');
+    await assertFails(setDoc(doc(firestoreAs('caio', 'caio.lima'), 'users/caio'), memberFields('caio.lima', 'participant')));
+  });
+
+  it('lets anyone check whether registrations are open', async () => {
+    await seed('closed');
+    await assertSucceeds(getDoc(doc(testEnvironment.unauthenticatedContext().firestore() as unknown as Firestore, 'settings/draw')));
   });
 
   it('forbids strangers from reading the member list', async () => {

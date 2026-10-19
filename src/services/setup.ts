@@ -1,10 +1,8 @@
-import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, onSnapshot, writeBatch, type Unsubscribe } from 'firebase/firestore';
-import { auth, db } from '../firebase';
+import { db, registrationDb } from '../firebase';
 import { logListenerError } from '../lib/logListenerError';
-import { usernameToEmail } from '../lib/username';
 import type { NewMemberInput } from '../types';
-import { buildMemberFields, memberRef } from './members';
+import { buildMemberFields, createAccount } from './accounts';
 
 const adminMarkerRef = doc(db, 'meta', 'admin');
 
@@ -17,10 +15,11 @@ export function watchAdminExists(onChange: (adminExists: boolean) => void): Unsu
 }
 
 export async function registerFirstAdmin(input: FirstAdminInput): Promise<void> {
-  const fields = buildMemberFields(input, 'admin', input.participates);
-  const credential = await createUserWithEmailAndPassword(auth, usernameToEmail(fields.username), input.password);
-  const batch = writeBatch(db);
-  batch.set(memberRef(credential.user.uid), fields);
-  batch.set(adminMarkerRef, { uid: credential.user.uid });
-  await batch.commit();
+  const fields = buildMemberFields(input.fullName, 'admin', input.participates);
+  await createAccount(input, fields, async (uid) => {
+    const batch = writeBatch(registrationDb);
+    batch.set(doc(registrationDb, 'users', uid), fields);
+    batch.set(doc(registrationDb, 'meta', 'admin'), { uid });
+    await batch.commit();
+  });
 }

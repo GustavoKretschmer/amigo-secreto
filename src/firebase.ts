@@ -21,9 +21,11 @@ const registrationApp = initializeApp(firebaseOptions, 'registration');
 export const auth = getAuth(mainApp);
 export const registrationAuth = getAuth(registrationApp);
 export const db = getFirestore(mainApp);
+export const registrationDb = getFirestore(registrationApp);
 
 if (import.meta.env.VITE_USE_EMULATORS === 'true') {
   connectAuthEmulator(auth, AUTH_EMULATOR_URL, { disableWarnings: true });
   connectAuthEmulator(registrationAuth, AUTH_EMULATOR_URL, { disableWarnings: true });
   connectFirestoreEmulator(db, FIRESTORE_EMULATOR_HOST, FIRESTORE_EMULATOR_PORT);
+  connectFirestoreEmulator(registrationDb, FIRESTORE_EMULATOR_HOST, FIRESTORE_EMULATOR_PORT);
 }

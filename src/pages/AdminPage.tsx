@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { AddParticipantForm } from '../components/admin/AddParticipantForm';
 import { DrawControls } from '../components/admin/DrawControls';
+import { InviteCard } from '../components/admin/InviteCard';
 import { ParticipantList } from '../components/admin/ParticipantList';
 import { PageFrame } from '../components/PageFrame';
 import { LoadingScreen } from '../components/StatusScreen';
@@ -34,7 +34,7 @@ function ManagementPanel() {
     <main className="content admin-grid">
       <div className="admin-column">
         <DrawControls members={members} drawStatus={drawStatus} />
-        <AddParticipantForm />
+        <InviteCard drawStatus={drawStatus} />
       </div>
       <ParticipantList members={members} drawStatus={drawStatus} filledWishOwners={filledWishOwners} />
     </main>

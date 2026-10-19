@@ -41,6 +41,7 @@ service cloud.firestore {
       return member.keys().hasOnly(['username', 'displayName', 'role', 'participates', 'hasDrawn'])
         && member.username is string && member.username.size() > 2
         && member.displayName is string && member.displayName.size() > 1
+        && request.auth.token.email == member.username + '@amigo-secreto.app'
         && member.role == role
         && member.participates is bool
         && member.hasDrawn == false;
@@ -53,10 +54,11 @@ service cloud.firestore {
         && isValidNewMember('admin');
     }
 
-    function isParticipantRegistration() {
-      return isAdmin()
+    function isSelfRegistration(uid) {
+      return request.auth.uid == uid
         && isValidNewMember('participant')
-        && request.resource.data.participates == true;
+        && request.resource.data.participates == true
+        && !drawIsOpen();
     }
 
     function isOwnDrawCompletion(uid) {
@@ -96,13 +98,13 @@ service cloud.firestore {
 
     match /users/{uid} {
       allow read: if isMember() || (signedIn() && request.auth.uid == uid);
-      allow create: if isFirstAdminRegistration(uid) || isParticipantRegistration();
+      allow create: if isFirstAdminRegistration(uid) || isSelfRegistration(uid);
       allow update: if isOwnDrawCompletion(uid) || isAdminDrawReset();
       allow delete: if isAdmin() && request.auth.uid != uid && !drawIsOpen();
     }
 
     match /settings/draw {
-      allow read: if isMember();
+      allow read: if true;
       allow write: if isAdmin()
         && request.resource.data.keys().hasOnly(['status'])
         && request.resource.data.status in ['open', 'closed'];

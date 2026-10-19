@@ -1,14 +1,15 @@
 # 🎁 Amigo Secreto
 
-App web para sortear o amigo secreto. O organizador cadastra os participantes, cada um entra com `nome.sobrenome` e senha, clica em **Sortear amigo secreto** e descobre quem tirou. Ninguém além da própria pessoa vê o resultado, nem o organizador.
+App web para sortear o amigo secreto. Cada pessoa cria a própria conta com nome completo e senha, entra com `nome.sobrenome`, clica em **Sortear amigo secreto** e descobre quem tirou. Ninguém além da própria pessoa vê o resultado, nem o organizador.
 
 Feito com React + TypeScript (Vite) e Firebase (Authentication, Firestore e Hosting), tudo no plano gratuito.
 
 ## Como funciona
 
 - **Primeiro acesso:** o site mostra a tela "Bem-vindo, organizador!" para criar a conta de administrador. Ela só aparece uma vez.
-- **Organizador:** cadastra participantes (o app gera uma senha e uma mensagem pronta para enviar), acompanha quem já sorteou, libera ou reinicia o sorteio e também pode participar.
-- **Participante:** entra, clica em sortear, vê a animação do presente e o nome sorteado. Se entrar de novo, vê o mesmo nome.
+- **Criar conta:** na tela de login, "Criar conta" pede o nome completo e a senha. O login vira primeiro nome + último sobrenome (`João da Silva Santos` → `joao.santos`). As inscrições fecham quando o sorteio é liberado.
+- **Organizador:** copia o convite com o link, acompanha quem já sorteou e quem falta preencher a sugestão de presente, libera ou reinicia o sorteio e também pode participar.
+- **Participante:** preenche a sugestão de presente (obrigatória), clica em sortear e vê o nome sorteado com a sugestão dele logo abaixo. Se entrar de novo, vê o mesmo resultado.
 - **Regras do sorteio:** ninguém tira a si mesmo, ninguém é tirado duas vezes e o último a sortear nunca fica sem opção.
 - **Segurança:** as regras do Firestore (`firestore.rules`) garantem que cada pessoa só lê o próprio resultado e impedem sorteio duplicado ou forjado.
 
@@ -37,7 +38,7 @@ npx firebase login
 npm run deploy
 ```
 
-O deploy publica o site e as regras de segurança. O endereço fica `https://<id-do-projeto>.web.app`. Abra, crie a conta de organizador e comece a cadastrar a turma.
+O deploy publica o site e as regras de segurança. O endereço fica `https://<id-do-projeto>.web.app`. Abra, crie a conta de organizador e mande o convite para a turma.
 
 ## Comandos
 
@@ -54,5 +55,7 @@ O deploy publica o site e as regras de segurança. O endereço fica `https://<id
 
 - O login `nome.sobrenome` vira internamente um e-mail `nome.sobrenome@amigo-secreto.app` no Firebase Authentication. O participante nunca precisa saber disso.
 - As senhas ficam guardadas pelo Firebase Authentication de forma criptografada. Ninguém consegue vê-las, nem o organizador. Cada participante pode trocar a própria senha pelo botão **Trocar senha**.
-- Remover um participante (permitido só com o sorteio fechado) tira o acesso dele ao app. Para recadastrar alguém com o mesmo nome, apague antes a conta em **Authentication > Usuários** no console do Firebase.
+- Remover um participante (permitido só com o sorteio fechado) tira o acesso dele ao app. Para a pessoa se cadastrar de novo com o mesmo nome, apague antes a conta dela em **Authentication > Usuários** no console do Firebase.
+- Duas pessoas com o mesmo primeiro nome e último sobrenome geram o mesmo login. A segunda deve colocar outro sobrenome no final do nome completo.
+- Para começar do zero, apague as contas em **Authentication > Usuários** e os dados com `npx firebase firestore:delete --all-collections`. Sem apagar os dados, o marcador de organizador antigo continua valendo.
 - **Reiniciar sorteio** apaga todos os resultados e fecha o sorteio para você liberar de novo.

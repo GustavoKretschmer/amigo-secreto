@@ -8,12 +8,18 @@ function toLoginWord(word: string): string {
     .replace(/[^a-z0-9]+/g, '');
 }
 
-export function buildUsername(firstName: string, lastName: string): string {
-  return `${toLoginWord(firstName)}.${toLoginWord(lastName)}`;
+function splitNameWords(fullName: string): string[] {
+  return fullName.trim().split(/\s+/).filter((word) => toLoginWord(word) !== '');
 }
 
-export function buildDisplayName(firstName: string, lastName: string): string {
-  return `${firstName.trim()} ${lastName.trim()}`;
+export function buildUsername(fullName: string): string {
+  const words = splitNameWords(fullName);
+  if (words.length < 2) return '';
+  return `${toLoginWord(words[0])}.${toLoginWord(words[words.length - 1])}`;
+}
+
+export function buildDisplayName(fullName: string): string {
+  return fullName.trim().split(/\s+/).join(' ');
 }
 
 export function usernameToEmail(username: string): string {
