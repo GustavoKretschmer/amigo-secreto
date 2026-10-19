@@ -26,6 +26,7 @@ async function seed(drawStatus: 'open' | 'closed'): Promise<void> {
     await setDoc(doc(db, 'users/ana'), memberFields('ana.silva', 'participant'));
     await setDoc(doc(db, 'users/bia'), memberFields('bia.souza', 'participant'));
     await setDoc(doc(db, 'settings/draw'), { status: drawStatus });
+    for (const uid of ['admin', 'ana', 'bia']) await setDoc(doc(db, `wishes/${uid}`), { text: 'Um presente' });
   });
 }
 
@@ -102,6 +103,14 @@ describe('drawing', () => {
     await assertFails(getDoc(doc(firestoreAs('admin'), 'assignments/ana')));
   });
 
+  it('rejects drawing without a gift wish', async () => {
+    await seed('open');
+    await testEnvironment.withSecurityRulesDisabled(async (context) => {
+      await deleteDoc(doc(context.firestore() as unknown as Firestore, 'wishes/ana'));
+    });
+    await assertFails(drawBatch(firestoreAs('ana'), 'ana', 'bia', 'bia.souza').commit());
+  });
+
   it('rejects drawing yourself', async () => {
     await seed('open');
     await assertFails(drawBatch(firestoreAs('ana'), 'ana', 'ana', 'ana.silva').commit());
@@ -156,5 +165,42 @@ describe('admin draw management', () => {
   it('allows removing participants while the draw is closed', async () => {
     await seed('closed');
     await assertSucceeds(deleteDoc(doc(firestoreAs('admin'), 'users/bia')));
+  });
+});
+
+describe('gift wishes', () => {
+  function wishFields(text: string) {
+    return { text, updatedAt: serverTimestamp() };
+  }
+
+  it('lets a member save their own wish', async () => {
+    await seed('closed');
+    await assertSucceeds(setDoc(doc(firestoreAs('ana'), 'wishes/ana'), wishFields('Um livro de receitas')));
+  });
+
+  it('forbids writing someone else wish', async () => {
+    await seed('closed');
+    await assertFails(setDoc(doc(firestoreAs('ana'), 'wishes/bia'), wishFields('Meias velhas')));
+  });
+
+  it('lets other members read a wish', async () => {
+    await seed('closed');
+    await assertSucceeds(setDoc(doc(firestoreAs('ana'), 'wishes/ana'), wishFields('Chocolate')));
+    await assertSucceeds(getDoc(doc(firestoreAs('bia'), 'wishes/ana')));
+  });
+
+  it('hides wishes from strangers', async () => {
+    await seed('closed');
+    await assertFails(getDoc(doc(firestoreAs('stranger'), 'wishes/ana')));
+  });
+
+  it('rejects an empty wish', async () => {
+    await seed('closed');
+    await assertFails(setDoc(doc(firestoreAs('ana'), 'wishes/ana'), wishFields('')));
+  });
+
+  it('rejects wishes longer than 500 characters', async () => {
+    await seed('closed');
+    await assertFails(setDoc(doc(firestoreAs('ana'), 'wishes/ana'), wishFields('a'.repeat(501))));
   });
 });

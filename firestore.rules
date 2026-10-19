@@ -115,8 +115,28 @@ service cloud.firestore {
         && isMember()
         && currentMember().participates == true
         && drawIsOpen()
+        && hasFilledWish(giverUid)
         && isValidAssignment(giverUid);
       allow delete: if isAdmin();
+    }
+
+    function hasFilledWish(uid) {
+      return exists(docPath('wishes', uid))
+        && get(docPath('wishes', uid)).data.text.size() > 0;
+    }
+
+    function isValidWish() {
+      let wish = request.resource.data;
+      return wish.keys().hasOnly(['text', 'updatedAt'])
+        && wish.text is string
+        && wish.text.size() > 0
+        && wish.text.size() <= 500
+        && wish.updatedAt == request.time;
+    }
+
+    match /wishes/{uid} {
+      allow read: if isMember();
+      allow create, update: if isMember() && request.auth.uid == uid && isValidWish();
     }
 
     match /claims/{receiverUid} {

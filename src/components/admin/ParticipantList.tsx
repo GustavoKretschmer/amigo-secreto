@@ -7,9 +7,10 @@ import { FormError } from '../FormError';
 interface ParticipantListProps {
   members: readonly Member[];
   drawStatus: DrawStatus;
+  filledWishOwners: ReadonlySet<string>;
 }
 
-export function ParticipantList({ members, drawStatus }: ParticipantListProps) {
+export function ParticipantList({ members, drawStatus, filledWishOwners }: ParticipantListProps) {
   const [pendingRemovalUid, setPendingRemovalUid] = useState<string | null>(null);
   const { isRunning, errorMessage, run } = useAsyncAction();
   const canRemove = drawStatus === 'closed';
@@ -29,7 +30,11 @@ export function ParticipantList({ members, drawStatus }: ParticipantListProps) {
           <li key={member.uid} className="member-row">
             <span className="user-avatar" aria-hidden="true">{member.displayName.charAt(0)}</span>
             <span className="member-identity">
-              <span className="member-name">{member.displayName}{member.role === 'admin' && <span className="tag">organizador</span>}</span>
+              <span className="member-name">
+                {member.displayName}
+                {member.role === 'admin' && <span className="tag">organizador</span>}
+                {member.participates && !filledWishOwners.has(member.uid) && <span className="tag tag-alert" title="Ainda não preencheu a sugestão de presente">sem sugestão</span>}
+              </span>
               <span className="mono small muted">{member.username}</span>
             </span>
             <DrawBadge member={member} />

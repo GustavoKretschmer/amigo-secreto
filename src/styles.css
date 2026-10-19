@@ -353,3 +353,38 @@ button { font: inherit; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
 }
+
+.wish-form { margin-top: 18px; }
+.wish-textarea { min-height: 140px; resize: vertical; line-height: 1.5; }
+
+.gift-suggestion {
+  max-width: 100%;
+  margin: 6px 0 4px;
+  padding: 14px 18px;
+  border-radius: var(--radius-md);
+  background: rgba(233, 184, 96, 0.1);
+  border: 1px solid rgba(233, 184, 96, 0.3);
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.gift-suggestion-label { color: var(--gold-strong); }
+
+@media (max-width: 520px) {
+  .tabs { width: auto; margin-inline: 16px; overflow-x: auto; }
+  .tab { white-space: nowrap; padding-inline: 14px; }
+}
+
+.required-mark { color: var(--berry); }
+.tag-alert { background: rgba(200, 57, 79, 0.22); color: #ffb8c4; }
+
+.warning-note {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: rgba(233, 184, 96, 0.12);
+  border: 1px solid rgba(233, 184, 96, 0.4);
+  color: var(--gold-strong);
+  font-size: 0.9rem;
+}

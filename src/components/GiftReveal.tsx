@@ -3,6 +3,7 @@ import { useAsyncAction } from '../hooks/useAsyncAction';
 import { drawSecretFriend } from '../services/draw';
 import type { Assignment } from '../types';
 import { FormError } from './FormError';
+import { RevealedFriend } from './RevealedFriend';
 
 const OPENING_ANIMATION_MS = 1800;
 
@@ -27,7 +28,7 @@ export function GiftReveal({ giverUid, assignment }: GiftRevealProps) {
     setIsOpening(false);
   }
 
-  if (assignment && !isOpening) return <RevealedFriend receiverName={assignment.receiverName} />;
+  if (assignment && !isOpening) return <RevealedFriend assignment={assignment} />;
 
   return (
     <section className="card reveal-card">
@@ -42,21 +43,6 @@ export function GiftReveal({ giverUid, assignment }: GiftRevealProps) {
       <button className="button button-primary button-large" onClick={() => void handleDraw()} disabled={isOpening}>
         {isOpening ? 'Sorteando…' : 'Sortear amigo secreto'}
       </button>
-    </section>
-  );
-}
-
-function RevealedFriend({ receiverName }: { receiverName: string }) {
-  return (
-    <section className="card reveal-card revealed">
-      <div className="confetti" aria-hidden="true">
-        {Array.from({ length: 18 }, (_, index) => (
-          <span key={index} className="confetti-piece" style={{ ['--i' as string]: index }} />
-        ))}
-      </div>
-      <p className="eyebrow">Seu amigo secreto é</p>
-      <h1 className="friend-name">{receiverName}</h1>
-      <p className="muted">Guarde segredo e capriche no presente! 🎄</p>
     </section>
   );
 }
