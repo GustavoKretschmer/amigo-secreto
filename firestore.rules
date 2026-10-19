@@ -53,7 +53,7 @@ service cloud.firestore {
         && isValidNewMember('admin');
     }
 
-    function isParticipantRegistration(uid) {
+    function isParticipantRegistration() {
       return isAdmin()
         && isValidNewMember('participant')
         && request.resource.data.participates == true;
@@ -96,7 +96,7 @@ service cloud.firestore {
 
     match /users/{uid} {
       allow read: if isMember() || (signedIn() && request.auth.uid == uid);
-      allow create: if isFirstAdminRegistration(uid) || isParticipantRegistration(uid);
+      allow create: if isFirstAdminRegistration(uid) || isParticipantRegistration();
       allow update: if isOwnDrawCompletion(uid) || isAdminDrawReset();
       allow delete: if isAdmin() && request.auth.uid != uid && !drawIsOpen();
     }
