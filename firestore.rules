@@ -36,7 +36,7 @@ service cloud.firestore {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
     }
 
-    function isValidNewMember(uid, role) {
+    function isValidNewMember(role) {
       let member = request.resource.data;
       return member.keys().hasOnly(['username', 'displayName', 'role', 'participates', 'hasDrawn'])
         && member.username is string && member.username.size() > 2
@@ -50,12 +50,12 @@ service cloud.firestore {
       return request.auth.uid == uid
         && !adminAlreadyRegistered()
         && getAfter(docPath('meta', 'admin')).data.uid == uid
-        && isValidNewMember(uid, 'admin');
+        && isValidNewMember('admin');
     }
 
     function isParticipantRegistration(uid) {
       return isAdmin()
-        && isValidNewMember(uid, 'participant')
+        && isValidNewMember('participant')
         && request.resource.data.participates == true;
     }
 
