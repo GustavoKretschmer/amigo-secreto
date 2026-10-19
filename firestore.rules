@@ -1,0 +1,133 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function docPath(collectionName, id) {
+      return /databases/$(database)/documents/$(collectionName)/$(id);
+    }
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isMember() {
+      return signedIn() && exists(docPath('users', request.auth.uid));
+    }
+
+    function currentMember() {
+      return get(docPath('users', request.auth.uid)).data;
+    }
+
+    function isAdmin() {
+      return isMember() && currentMember().role == 'admin';
+    }
+
+    function drawIsOpen() {
+      return exists(docPath('settings', 'draw'))
+        && get(docPath('settings', 'draw')).data.status == 'open';
+    }
+
+    function adminAlreadyRegistered() {
+      return exists(docPath('meta', 'admin'));
+    }
+
+    function changesOnly(fields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
+    }
+
+    function isValidNewMember(uid, role) {
+      let member = request.resource.data;
+      return member.keys().hasOnly(['username', 'displayName', 'role', 'participates', 'hasDrawn'])
+        && member.username is string && member.username.size() > 2
+        && member.displayName is string && member.displayName.size() > 1
+        && member.role == role
+        && member.participates is bool
+        && member.hasDrawn == false;
+    }
+
+    function isFirstAdminRegistration(uid) {
+      return request.auth.uid == uid
+        && !adminAlreadyRegistered()
+        && getAfter(docPath('meta', 'admin')).data.uid == uid
+        && isValidNewMember(uid, 'admin');
+    }
+
+    function isParticipantRegistration(uid) {
+      return isAdmin()
+        && isValidNewMember(uid, 'participant')
+        && request.resource.data.participates == true;
+    }
+
+    function isOwnDrawCompletion(uid) {
+      return request.auth.uid == uid
+        && changesOnly(['hasDrawn'])
+        && request.resource.data.hasDrawn == true
+        && existsAfter(docPath('assignments', uid));
+    }
+
+    function isAdminDrawReset() {
+      return isAdmin()
+        && changesOnly(['hasDrawn'])
+        && request.resource.data.hasDrawn == false;
+    }
+
+    function isValidAssignment(giverUid) {
+      let assignment = request.resource.data;
+      let receiver = get(docPath('users', assignment.receiverUid)).data;
+      return assignment.keys().hasOnly(['receiverUid', 'receiverName', 'drawnAt'])
+        && assignment.receiverUid != giverUid
+        && exists(docPath('users', assignment.receiverUid))
+        && receiver.participates == true
+        && assignment.receiverName == receiver.displayName
+        && assignment.drawnAt == request.time
+        && !exists(docPath('claims', assignment.receiverUid))
+        && existsAfter(docPath('claims', assignment.receiverUid));
+    }
+
+    match /meta/admin {
+      allow read: if true;
+      allow create: if signedIn()
+        && !adminAlreadyRegistered()
+        && request.resource.data.keys().hasOnly(['uid'])
+        && request.resource.data.uid == request.auth.uid
+        && getAfter(docPath('users', request.auth.uid)).data.role == 'admin';
+    }
+
+    match /users/{uid} {
+      allow read: if isMember() || (signedIn() && request.auth.uid == uid);
+      allow create: if isFirstAdminRegistration(uid) || isParticipantRegistration(uid);
+      allow update: if isOwnDrawCompletion(uid) || isAdminDrawReset();
+      allow delete: if isAdmin() && request.auth.uid != uid && !drawIsOpen();
+    }
+
+    match /settings/draw {
+      allow read: if isMember();
+      allow write: if isAdmin()
+        && request.resource.data.keys().hasOnly(['status'])
+        && request.resource.data.status in ['open', 'closed'];
+    }
+
+    match /assignments/{giverUid} {
+      allow read: if signedIn() && request.auth.uid == giverUid;
+      allow create: if signedIn()
+        && request.auth.uid == giverUid
+        && isMember()
+        && currentMember().participates == true
+        && drawIsOpen()
+        && isValidAssignment(giverUid);
+      allow delete: if isAdmin();
+    }
+
+    match /claims/{receiverUid} {
+      allow read: if isMember();
+      allow create: if isMember()
+        && drawIsOpen()
+        && request.resource.data.keys().hasOnly(['claimedAt'])
+        && request.resource.data.claimedAt == request.time
+        && !exists(docPath('assignments', request.auth.uid))
+        && getAfter(docPath('assignments', request.auth.uid)).data.receiverUid == receiverUid;
+      allow delete: if isAdmin();
+    }
+  }
+}
